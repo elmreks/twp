@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Too White Productions</title>
-  <meta name="description" content="Too White Productions: chaotic audio dropzone." />
+  <meta name="description" content="Too White Productions: chaotic audio dumpzone." />
   <style>
-    :root { color-scheme: light dark; }
+    :root { color-scheme: dark; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -16,7 +16,7 @@
       color: #f7f7ff;
     }
 
-    /* Chaotic moving background */
+    /* Chaotic background */
     .bg {
       position: fixed; inset: -40vmax;
       background:
@@ -35,7 +35,6 @@
       100% { transform: rotate(0deg) scale(1.05); }
     }
 
-    /* Faux “spray paint” noise overlay */
     .noise {
       position: fixed; inset: 0;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
@@ -45,32 +44,8 @@
       z-index: -2;
     }
 
-    /* Floating stickers */
-    .sticker {
-      position: fixed;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 2px solid rgba(255,255,255,.35);
-      background: rgba(0,0,0,.35);
-      box-shadow: 0 12px 50px rgba(0,0,0,.35);
-      backdrop-filter: blur(10px);
-      transform: rotate(var(--r, 0deg));
-      animation: drift var(--t, 9s) ease-in-out infinite;
-      z-index: -1;
-      user-select: none;
-      font-weight: 800;
-      letter-spacing: .5px;
-      text-transform: uppercase;
-      font-size: 12px;
-    }
-    @keyframes drift {
-      0%   { transform: translate3d(0,0,0) rotate(var(--r, 0deg)); }
-      50%  { transform: translate3d(var(--x, 20px), var(--y, 30px), 0) rotate(calc(var(--r, 0deg) + 7deg)); }
-      100% { transform: translate3d(0,0,0) rotate(var(--r, 0deg)); }
-    }
-
     .wrap {
-      max-width: 980px;
+      max-width: 1040px;
       margin: 0 auto;
       padding: 22px 16px 80px;
     }
@@ -81,7 +56,7 @@
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
     .tag {
@@ -97,34 +72,38 @@
       opacity: .95;
     }
 
+    /* Marquee that never cuts off */
     .marquee {
       border: 1px solid rgba(255,255,255,.18);
       border-radius: 14px;
       background: rgba(0,0,0,.28);
       overflow: hidden;
       position: relative;
+      margin-bottom: 16px;
     }
-    .marquee > div {
-      display: inline-block;
+    .marquee-track {
+      display: flex;
+      width: max-content;
       white-space: nowrap;
       padding: 10px 0;
-      animation: scroll 12s linear infinite;
       will-change: transform;
-    }
-    @keyframes scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
+      animation: marqueeScroll 20s linear infinite;
     }
     .marquee span {
       display: inline-block;
       padding: 0 16px;
-      font-weight: 900;
+      font-weight: 950;
       letter-spacing: .8px;
       text-transform: uppercase;
+      opacity: .95;
+    }
+    @keyframes marqueeScroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
     }
 
     .hero {
-      margin-top: 18px;
+      margin-top: 10px;
       padding: 18px;
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,.18);
@@ -148,8 +127,24 @@
       margin: 10px 0 0;
       font-size: clamp(14px, 2.2vw, 18px);
       opacity: .9;
-      max-width: 68ch;
+      max-width: 72ch;
     }
+
+    .btnrow { display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px; }
+    .btn {
+      border: 1px solid rgba(255,255,255,.20);
+      background: rgba(255,255,255,.06);
+      color: inherit;
+      padding: 10px 12px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 900;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+      font-size: 12px;
+      transition: transform .14s ease, background .14s ease;
+    }
+    .btn:hover { transform: translateY(-2px); background: rgba(255,255,255,.10); }
 
     .grid {
       display: grid;
@@ -181,7 +176,7 @@
     .card h2 {
       margin: 0;
       font-size: 18px;
-      font-weight: 900;
+      font-weight: 950;
       letter-spacing: .5px;
       text-transform: uppercase;
     }
@@ -200,6 +195,7 @@
     }
 
     .tracklist { padding: 12px; display: grid; gap: 12px; }
+
     .track {
       padding: 14px;
       border-radius: 16px;
@@ -210,28 +206,23 @@
         radial-gradient(circle at 60% 90%, rgba(255,240,0,.14), transparent 50%),
         rgba(0,0,0,.20);
       transition: transform .18s ease, border-color .18s ease;
+      cursor: pointer;
     }
     .track:hover { transform: translateY(-3px) rotate(-.15deg); border-color: rgba(255,255,255,.34); }
 
-    a.tracklink {
-      color: inherit;
-      text-decoration: none;
-      display: block;
-    }
-
     .tracktitle {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: baseline;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:baseline;
     }
     .tracktitle strong {
       font-size: 20px;
-      font-weight: 950;
+      font-weight: 1000;
       letter-spacing: .2px;
     }
-    .tracktitle em {
+    .badge {
       font-style: normal;
       opacity: .8;
       font-size: 12px;
@@ -239,35 +230,37 @@
       padding: 4px 8px;
       border-radius: 999px;
       background: rgba(0,0,0,.20);
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
     }
+    .desc { margin-top: 8px; opacity: .9; line-height: 1.35; font-size: 13px; }
 
-    .desc { margin-top: 8px; opacity: .9; line-height: 1.35; }
-    .micro { margin-top: 10px; font-size: 12px; opacity: .75; display: flex; gap: 10px; flex-wrap: wrap; }
-
-    .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-    .btn {
-      border: 1px solid rgba(255,255,255,.20);
-      background: rgba(255,255,255,.06);
-      color: inherit;
-      padding: 10px 12px;
-      border-radius: 14px;
-      text-decoration: none;
-      font-weight: 850;
-      letter-spacing: .3px;
-      text-transform: uppercase;
-      font-size: 12px;
-      transition: transform .14s ease, background .14s ease;
+    .viewer {
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+      border-top: 1px dashed rgba(255,255,255,.22);
+      background: rgba(0,0,0,.18);
     }
-    .btn:hover { transform: translateY(-2px); background: rgba(255,255,255,.10); }
+    .viewer.hidden { display:none; }
+
+    audio { width: 100%; }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+      font-size: 14px;
+      opacity: .95;
+    }
 
     .two { grid-column: span 12; }
-    @media (min-width: 860px) {
-      .two { grid-column: span 6; }
-    }
+    @media (min-width: 900px) { .two { grid-column: span 6; } }
 
     .rant { padding: 14px; }
     .rant p { margin: 0; line-height: 1.45; opacity: .92; }
-    .rant b { opacity: 1; }
 
     footer {
       margin-top: 20px;
@@ -282,28 +275,14 @@
       opacity: .9;
     }
 
-    /* tiny chaos button */
-    .chaos {
-      cursor: pointer;
-      user-select: none;
-      border-radius: 999px;
-      padding: 8px 12px;
-      border: 1px solid rgba(255,255,255,.22);
-      background: rgba(255,255,255,.08);
-      font-weight: 950;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      font-size: 12px;
-    }
+    .tiny { font-size: 12px; opacity: .7; }
+    .error { color: #ff5c7a; font-weight: 900; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
   </style>
 </head>
 <body>
   <div class="bg"></div>
   <div class="noise"></div>
-
-  <div class="sticker" style="top: 14px; left: 12px; --r:-12deg; --x: 18px; --y: 22px; --t: 7s;">Certified Unhinged</div>
-  <div class="sticker" style="top: 88px; right: 14px; --r:10deg; --x: -20px; --y: 26px; --t: 9s;">Caution: Beats</div>
-  <div class="sticker" style="bottom: 22px; left: 18px; --r:6deg; --x: 24px; --y: -18px; --t: 10s;">No Refunds</div>
 
   <div class="wrap">
     <div class="topbar">
@@ -312,54 +291,73 @@
     </div>
 
     <div class="marquee" aria-hidden="true">
-      <div>
+      <div class="marquee-track" id="mqTrack">
         <span>too white productions</span>
-        <span>upload tracks / do crack / cause problems</span>
-        <span>farting up a crime scene</span>
+        <span>upload tracks / share links / cause problems</span>
+        <span>art is a crime scene</span>
         <span>turn volume up / turn dignity down</span>
-        <span>too white productions</span>
-        <span>upload tracks / share drinks / get drunk</span>
-        <span>poop on the muthafuckin sidewalk</span>
-        <span>turn volume up / turn dignity down</span>
+        <span>no refunds</span>
+        <span>unhinged audio archive</span>
       </div>
     </div>
 
     <section class="hero">
       <h1 class="title">Too White<br/>Productions</h1>
       <p class="subtitle">
-        A fictional label with a real audio player problem: you want a link that just plays the damn track and shows the lyrics.
-        This is the lobby. The chaos is intentional. The taste is questionable. The beats are stupid, stupid fresh.
+        Drop-a-folder. Get-a-link. No platforms. No logins. No vibes police.
+        Click a track to preview it right here, or open the track page for the clean link.
       </p>
-
       <div class="btnrow">
-        <a class="btn" href="#tracks">Enter the tracks</a>
-        <a class="btn" href="tracks/" title="If you make a tracks index later, this can point there.">Open /tracks/ (optional)</a>
-        <span class="chaos" id="chaosBtn">Summon Chaos</span>
+        <a class="btn" href="#drops">Enter the drops</a>
+        <a class="btn" href="./tracks/">Open /tracks/</a>
+        <a class="btn" href="#how">How it works</a>
+      </div>
+      <div class="tiny" style="margin-top:10px;">
+        Folder format: <code>tracks/YYYY-MM-DD_title/</code> containing <code>index.html</code>, <code>lyrics.txt</code>, <code>song.m4a</code>
       </div>
     </section>
 
-    <div class="grid" id="tracks">
+    <div class="grid" id="drops">
       <section class="card">
         <div class="hd">
           <h2>Recent Drops</h2>
-          <span class="pill">🎛️ 100% homemade, 0% regulated</span>
+          <span class="pill">🎛️ live list from /tracks</span>
         </div>
-        <div id="trackList" class="tracklist"><!-- fuck! placeholder stuff used to be here --></div>      
-      </div>
+
+        <div class="tracklist" id="trackList">
+          <div style="opacity:.8; padding:8px;">Loading tracks…</div>
+        </div>
+
+        <div class="viewer hidden" id="viewer">
+          <div class="tracktitle">
+            <strong id="viewerTitle">—</strong>
+            <span class="badge">
+              <span id="viewerDate">—</span>
+              <a id="viewerLink" class="badge" href="#" style="text-decoration:none;">open page ↗</a>
+            </span>
+          </div>
+
+          <audio id="viewerAudio" controls preload="metadata"></audio>
+
+          <div class="tiny">
+            <span>if audio doesn’t load, you probably named the file wrong. it must be <code>song.m4a</code> (or <code>song.mp3</code>).</span>
+          </div>
+
+          <pre id="viewerLyrics">—</pre>
+        </div>
       </section>
 
-      <section class="card two">
+      <section class="card two" id="how">
         <div class="hd">
           <h2>How This Works</h2>
           <span class="pill">📦 folder = track</span>
         </div>
         <div class="rant">
           <p>
-            Each song lives in its own folder inside <b>/tracks/</b>. Inside that folder:
-            <b>index.html</b> (the track page), <b>lyrics.txt</b> (the words), and <b>song.mp3</b> (the noise).
+            Each song lives in its own folder inside <b>/tracks/</b>.
+            Inside that folder: <b>index.html</b> (the track page), <b>lyrics.txt</b> (the words), and <b>song.m4a</b> (the noise).
             <br/><br/>
-            You upload the folder, you get a clean link.
-            The lobby stays loud so the track pages can stay simple.
+            You upload the folder, you get a clean link. The lobby stays loud so the track pages can stay simple.
           </p>
         </div>
       </section>
@@ -382,7 +380,7 @@
 
     <footer>
       <div>© <span id="yr"></span> Too White Productions (fictional) — hosted on GitHub Pages</div>
-      <div style="opacity:.85;">contact: <span title="placeholder">too.white@nowhere.example</span></div>
+      <div class="tiny">operator: <b>elmreks</b></div>
     </footer>
   </div>
 
@@ -391,116 +389,125 @@
 
     const statuses = [
       "vibe: unstable",
-      "vibe: fluorescent menace",
       "vibe: chaotic neutral",
+      "vibe: fluorescent menace",
       "vibe: suspiciously groovy",
-      "vibe: fizzy violence",
       "vibe: glitter threat",
       "vibe: polite disaster"
     ];
+    document.getElementById("status").textContent =
+      statuses[Math.floor(Math.random() * statuses.length)];
 
-    const statusEl = document.getElementById("status");
-    const chaosBtn = document.getElementById("chaosBtn");
-
-    function setStatus() {
-      statusEl.textContent = statuses[Math.floor(Math.random() * statuses.length)];
+    // Marquee: duplicate content so it never cuts off
+    const mq = document.getElementById("mqTrack");
+    if (mq && !mq.dataset.duplicated) {
+      mq.dataset.duplicated = "true";
+      mq.innerHTML = mq.innerHTML + mq.innerHTML;
     }
-    setStatus();
 
-    chaosBtn.addEventListener("click", () => {
-      setStatus();
-      // Micro-chaos: shake the hero slightly
-      const hero = document.querySelector(".hero");
-      hero.animate(
-        [
-          { transform: "translate(0,0) rotate(0deg)" },
-          { transform: "translate(2px,-2px) rotate(-0.4deg)" },
-          { transform: "translate(-2px,2px) rotate(0.5deg)" },
-          { transform: "translate(1px,1px) rotate(-0.2deg)" },
-          { transform: "translate(0,0) rotate(0deg)" }
-        ],
-        { duration: 420, iterations: 1, easing: "ease-out" }
-      );
+    // ===== Track listing + preview =====
+    const OWNER = "elmreks";
+    const REPO  = "twp";
+    const TRACKS_PATH = "tracks";
+    const TRACK_DIR_REGEX = /^\\d{4}-\\d{2}-\\d{2}[_-]/;
+
+    const basePagesUrl = `${location.origin}/${REPO}/`;
+
+    const trackListEl = document.getElementById("trackList");
+    const viewerEl    = document.getElementById("viewer");
+    const vTitle      = document.getElementById("viewerTitle");
+    const vDate       = document.getElementById("viewerDate");
+    const vLink       = document.getElementById("viewerLink");
+    const vAudio      = document.getElementById("viewerAudio");
+    const vLyrics     = document.getElementById("viewerLyrics");
+
+    const titleFromFolder = (name) =>
+      name.replace(/^\\d{4}-\\d{2}-\\d{2}[_-]?/, "")
+          .replace(/[_-]+/g, " ")
+          .trim() || name;
+
+    const dateFromFolder = (name) => {
+      const m = name.match(/^(\\d{4}-\\d{2}-\\d{2})/);
+      return m ? m[1] : "—";
+    };
+
+    async function fetchJson(url) {
+      const r = await fetch(url, { headers: { "Accept": "application/vnd.github+json" } });
+      if (!r.ok) throw new Error(`Fetch failed ${r.status}`);
+      return r.json();
+    }
+
+    async function loadTracks() {
+      const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${TRACKS_PATH}`;
+      const items = await fetchJson(api);
+
+      const dirs = items
+        .filter(x => x.type === "dir")
+        .filter(x => TRACK_DIR_REGEX.test(x.name))
+        .sort((a,b) => dateFromFolder(b.name).localeCompare(dateFromFolder(a.name)));
+
+      if (!dirs.length) {
+        trackListEl.innerHTML = `<div style="opacity:.8; padding:8px;">No tracks yet.</div>`;
+        return;
+      }
+
+      trackListEl.innerHTML = dirs.map(d => {
+        const date = dateFromFolder(d.name);
+        const title = titleFromFolder(d.name);
+        const href = `${basePagesUrl}${TRACKS_PATH}/${d.name}/`;
+        return `
+          <div class="track" data-folder="${d.name}" data-href="${href}">
+            <div class="tracktitle">
+              <strong>${title}</strong>
+              <span class="badge">${date}</span>
+            </div>
+            <div class="desc">click to preview here • or open the track page</div>
+          </div>
+        `;
+      }).join("");
+
+      // click handlers
+      [...trackListEl.querySelectorAll(".track")].forEach(el => {
+        el.addEventListener("click", async () => {
+          const folder = el.dataset.folder;
+          const href   = el.dataset.href;
+
+          viewerEl.classList.remove("hidden");
+          vTitle.textContent = titleFromFolder(folder);
+          vDate.textContent  = dateFromFolder(folder);
+          vLink.href = href;
+
+          // Set audio sources (m4a preferred)
+          const m4a = `${basePagesUrl}${TRACKS_PATH}/${folder}/song.m4a`;
+          const mp3 = `${basePagesUrl}${TRACKS_PATH}/${folder}/song.mp3`;
+
+          vAudio.innerHTML = `
+            <source src="${m4a}" type="audio/mp4">
+            <source src="${mp3}" type="audio/mpeg">
+          `;
+          vAudio.load();
+
+          // Load lyrics (from live site path)
+          vLyrics.textContent = "Loading lyrics…";
+          try {
+            const lr = await fetch(`${basePagesUrl}${TRACKS_PATH}/${folder}/lyrics.txt`, { cache: "no-store" });
+            if (!lr.ok) throw new Error("lyrics missing");
+            const txt = await lr.text();
+            vLyrics.textContent = txt.trim() || "(lyrics intentionally blank)";
+          } catch (e) {
+            vLyrics.innerHTML = `<span class="error">lyrics.txt not found</span>`;
+          }
+
+          // Scroll viewer into view
+          viewerEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    }
+
+    loadTracks().catch(err => {
+      trackListEl.innerHTML = `<div class="error" style="padding:8px;">Couldn’t load /tracks list. ${err.message}</div>`;
+      console.error(err);
     });
   </script>
- <script>
-(() => {
-  const OWNER = "elmreks";
-  const REPO  = "twp";
-  const TRACKS_PATH = "tracks";
-
-  // folder naming rule: 2025-12-23_title-goes-here
-  const TRACK_DIR_REGEX = /^\d{4}-\d{2}-\d{2}[_-]/;
-
-  const mount = document.getElementById("trackList");
-
-  const basePagesUrl = `${location.origin}/${REPO}/`;
-
-  const titleFromFolder = (name) =>
-    name.replace(/^\d{4}-\d{2}-\d{2}[_-]?/, "")
-        .replace(/[_-]+/g, " ")
-        .trim() || name;
-
-  const dateFromFolder = (name) => {
-    const m = name.match(/^(\d{4}-\d{2}-\d{2})/);
-    return m ? m[1] : "—";
-  };
-
-  async function loadTracks() {
-    const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${TRACKS_PATH}`;
-    const res = await fetch(api, { headers: { "Accept": "application/vnd.github+json" } });
-    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-
-    const items = await res.json();
-
-    const dirs = items
-      .filter(x => x.type === "dir")
-      .filter(x => TRACK_DIR_REGEX.test(x.name))
-      .sort((a,b) => dateFromFolder(b.name).localeCompare(dateFromFolder(a.name)));
-
-    if (!dirs.length) {
-      mount.innerHTML = `<div style="opacity:.8">No tracks yet. Add folders under <code>/tracks</code>.</div>`;
-      return;
-    }
-
-    mount.innerHTML = `
-      <div style="display:grid; gap:12px; margin-top:14px;">
-        ${dirs.map(d => `
-          <a href="${basePagesUrl}${TRACKS_PATH}/${d.name}/" style="
-            display:block; text-decoration:none; color:inherit;
-            padding:14px; border-radius:16px;
-            border:1px solid rgba(255,255,255,.18);
-            background: rgba(0,0,0,.22);
-          ">
-            <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-              <div style="font-size:20px; font-weight:950;">${titleFromFolder(d.name)}</div>
-              <div style="font-size:12px; opacity:.8; border:1px solid rgba(255,255,255,.16); padding:4px 8px; border-radius:999px;">
-                ${dateFromFolder(d.name)}
-              </div>
-            </div>
-          </a>
-        `).join("")}
-      </div>
-    `;
-  }
-
-  loadTracks().catch(err => {
-    mount.innerHTML = `
-      <div style="color:#ff5c7a; font-weight:950;">Couldn’t load tracks.</div>
-      <div style="opacity:.75; font-size:12px; margin-top:6px;">${String(err.message || err)}</div>
-    `;
-    console.error(err);
-  });
-})();
-</script>
-
-<script>
-  const mq = document.getElementById("mqTrack");
-  if (mq && !mq.dataset.duplicated) {
-    mq.dataset.duplicated = "true";
-    mq.innerHTML = mq.innerHTML + mq.innerHTML;
-  }
-</script>
-
 </body>
 </html>
