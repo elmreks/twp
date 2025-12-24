@@ -2,511 +2,464 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Too White Productions</title>
-  <meta name="description" content="Too White Productions: chaotic audio dumpzone." />
+  <meta name="description" content="Too White Productions — drop folders, share tracks, cause tasteful problems." />
+
   <style>
-    :root { color-scheme: dark; }
+    :root{
+      color-scheme: dark;
+      --bg: #07070b;
+      --fg: #f3f3ff;
+      --muted: rgba(243,243,255,.70);
+      --line: rgba(243,243,255,.18);
+      --card: rgba(0,0,0,.35);
+      --ink: rgba(0,0,0,.55);
+
+      /* splash colors (organic-ish palette) */
+      --c1: #ff3aa6;
+      --c2: #00ffd5;
+      --c3: #ffe64d;
+      --c4: #7b5cff;
+      --c5: #ff6b2d;
+
+      --led: 0; /* toggled by button */
+    }
+
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      overflow-x: hidden;
-      background: #0b0b12;
-      color: #f7f7ff;
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: var(--bg);
+      color: var(--fg);
+      overflow-x:hidden;
     }
 
-    /* Chaotic background */
-    .bg {
-      position: fixed; inset: -40vmax;
-      background:
-        radial-gradient(circle at 12% 20%, rgba(255,0,160,.75), transparent 35%),
-        radial-gradient(circle at 80% 10%, rgba(0,255,240,.65), transparent 35%),
-        radial-gradient(circle at 70% 80%, rgba(255,240,0,.70), transparent 40%),
-        radial-gradient(circle at 20% 85%, rgba(120,70,255,.75), transparent 40%),
-        conic-gradient(from 90deg, rgba(255,255,255,.08), rgba(255,255,255,0), rgba(255,255,255,.08));
-      filter: blur(14px) saturate(1.35);
-      animation: wobble 11s ease-in-out infinite;
+    /* Organic “paint explosions” layer (SVG turbulence + blobs) */
+    .paint {
+      position: fixed;
+      inset: -20vmax;
       z-index: -3;
-    }
-    @keyframes wobble {
-      0%   { transform: rotate(0deg) scale(1.05); }
-      50%  { transform: rotate(9deg) scale(1.18); }
-      100% { transform: rotate(0deg) scale(1.05); }
+      pointer-events:none;
+      opacity: .92;
+      filter: saturate(1.25) contrast(1.05);
+      transform: scale(1.05);
     }
 
-    .noise {
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+    /* Grain */
+    .grain{
+      position:fixed; inset:0;
+      z-index:-2;
+      pointer-events:none;
+      opacity:.28;
       mix-blend-mode: overlay;
-      opacity: .55;
-      pointer-events: none;
-      z-index: -2;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
     }
 
-    .wrap {
-      max-width: 1040px;
+    /* Layout */
+    .wrap{
+      max-width: 980px;
       margin: 0 auto;
       padding: 22px 16px 80px;
     }
 
-    .topbar {
-      display: flex;
+    .top{
+      display:flex;
       justify-content: space-between;
-      gap: 10px;
       align-items: center;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-bottom: 12px;
     }
 
-    .tag {
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-      border: 1px solid rgba(255,255,255,.25);
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(255,255,255,.06);
-      backdrop-filter: blur(8px);
-      font-size: 13px;
-      opacity: .95;
+      letter-spacing: .2px;
+      font-weight: 800;
+      user-select:none;
+    }
+    .badge small{
+      opacity:.7;
+      font-weight:700;
     }
 
-    /* Marquee that never cuts off */
-    .marquee {
-      border: 1px solid rgba(255,255,255,.18);
-      border-radius: 14px;
-      background: rgba(0,0,0,.28);
-      overflow: hidden;
-      position: relative;
-      margin-bottom: 16px;
-    }
-    .marquee-track {
-      display: flex;
-      width: max-content;
-      white-space: nowrap;
-      padding: 10px 0;
-      will-change: transform;
-      animation: marqueeScroll 20s linear infinite;
-    }
-    .marquee span {
-      display: inline-block;
-      padding: 0 16px;
-      font-weight: 950;
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      opacity: .95;
-    }
-    @keyframes marqueeScroll {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    .hero {
-      margin-top: 10px;
-      padding: 18px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(0,0,0,.20));
-      box-shadow: 0 22px 80px rgba(0,0,0,.35);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .title {
-      margin: 0;
-      font-size: clamp(34px, 6vw, 64px);
-      line-height: 0.95;
-      letter-spacing: -1px;
-      font-weight: 1000;
-      text-transform: uppercase;
-      text-shadow: 0 10px 40px rgba(0,0,0,.55);
-    }
-
-    .subtitle {
-      margin: 10px 0 0;
-      font-size: clamp(14px, 2.2vw, 18px);
-      opacity: .9;
-      max-width: 72ch;
-    }
-
-    .btnrow { display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px; }
-    .btn {
-      border: 1px solid rgba(255,255,255,.20);
-      background: rgba(255,255,255,.06);
-      color: inherit;
-      padding: 10px 12px;
-      border-radius: 14px;
-      text-decoration: none;
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--fg);
+      padding: 9px 12px;
+      border-radius: 12px;
       font-weight: 900;
       letter-spacing: .3px;
       text-transform: uppercase;
-      font-size: 12px;
-      transition: transform .14s ease, background .14s ease;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, background .12s ease;
     }
-    .btn:hover { transform: translateY(-2px); background: rgba(255,255,255,.10); }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.085); }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 14px;
-      margin-top: 16px;
-    }
-
-    .card {
-      grid-column: span 12;
+    .hero{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,.22));
       border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(0,0,0,.28);
-      box-shadow: 0 16px 70px rgba(0,0,0,.28);
-      overflow: hidden;
+      padding: 18px;
+      box-shadow: 0 26px 90px rgba(0,0,0,.45);
+      position:relative;
+      overflow:hidden;
     }
 
-    .card .hd {
-      padding: 14px 14px 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 12px;
-      flex-wrap: wrap;
-      border-bottom: 1px dashed rgba(255,255,255,.22);
-      background: linear-gradient(90deg, rgba(255,0,160,.20), rgba(0,255,240,.14), rgba(255,240,0,.16));
-    }
-
-    .card h2 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 950;
-      letter-spacing: .5px;
+    .title{
+      margin:0;
+      font-size: clamp(34px, 6vw, 64px);
+      line-height: .95;
+      letter-spacing: -1px;
+      font-weight: 1000;
       text-transform: uppercase;
+      text-shadow: 0 16px 60px rgba(0,0,0,.6);
+    }
+    .subtitle{
+      margin: 10px 0 0;
+      max-width: 75ch;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: clamp(13px, 2.1vw, 16px);
     }
 
-    .pill {
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      border: 1px solid rgba(255,255,255,.22);
-      background: rgba(255,255,255,.06);
-      backdrop-filter: blur(8px);
+    .rulebox{
+      margin-top: 14px;
+      border:1px dashed rgba(243,243,255,.25);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(0,0,0,.25);
+    }
+    .rulebox h3{
+      margin:0 0 8px;
+      font-size: 13px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      font-weight: 1000;
       opacity: .95;
     }
-
-    .tracklist { padding: 12px; display: grid; gap: 12px; }
-
-    .track {
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.16);
-      background:
-        radial-gradient(circle at 20% 20%, rgba(255,0,160,.18), transparent 40%),
-        radial-gradient(circle at 80% 30%, rgba(0,255,240,.16), transparent 40%),
-        radial-gradient(circle at 60% 90%, rgba(255,240,0,.14), transparent 50%),
-        rgba(0,0,0,.20);
-      transition: transform .18s ease, border-color .18s ease;
-      cursor: pointer;
+    .rulebox code{
+      color: #fff;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.14);
+      padding: 2px 6px;
+      border-radius: 8px;
     }
-    .track:hover { transform: translateY(-3px) rotate(-.15deg); border-color: rgba(255,255,255,.34); }
+    .rulebox ul{
+      margin:0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 13px;
+    }
 
-    .tracktitle {
+    /* Track list */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .card{
+      grid-column: span 12;
+      border:1px solid var(--line);
+      border-radius: 18px;
+      background: var(--card);
+      overflow:hidden;
+      box-shadow: 0 16px 70px rgba(0,0,0,.35);
+    }
+    .hd{
       display:flex;
-      justify-content:space-between;
-      gap:10px;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
       flex-wrap:wrap;
-      align-items:baseline;
+      padding: 12px 14px;
+      border-bottom: 1px dashed rgba(243,243,255,.22);
+      background: rgba(0,0,0,.22);
     }
-    .tracktitle strong {
-      font-size: 20px;
+    .hd h2{
+      margin:0;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
       font-weight: 1000;
+    }
+    .hd .note{
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tracks{
+      padding: 12px;
+      display:grid;
+      gap: 12px;
+    }
+
+    .track{
+      display:block;
+      text-decoration:none;
+      color: var(--fg);
+      border: 1px solid rgba(243,243,255,.16);
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(0,0,0,.24);
+      position:relative;
+      overflow:hidden;
+      transition: transform .14s ease, border-color .14s ease;
+    }
+    .track:hover{
+      transform: translateY(-2px);
+      border-color: rgba(243,243,255,.34);
+    }
+
+    /* organic splat overlay per track */
+    .track::before{
+      content:"";
+      position:absolute; inset:-40%;
+      background:
+        radial-gradient(circle at 18% 22%, color-mix(in srgb, var(--c1), transparent 40%) 0 22%, transparent 35%),
+        radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--c2), transparent 45%) 0 24%, transparent 38%),
+        radial-gradient(circle at 62% 88%, color-mix(in srgb, var(--c3), transparent 55%) 0 26%, transparent 40%),
+        radial-gradient(circle at 15% 80%, color-mix(in srgb, var(--c4), transparent 50%) 0 28%, transparent 42%);
+      filter: blur(10px);
+      opacity: .75;
+      transform: rotate(-8deg);
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+    .track > *{ position:relative; z-index:1; }
+
+    .tline{
+      display:flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items: baseline;
+    }
+    .tname{
+      font-weight: 1000;
+      font-size: 18px;
       letter-spacing: .2px;
     }
-    .badge {
-      font-style: normal;
-      opacity: .8;
+    .tdate{
       font-size: 12px;
-      border: 1px solid rgba(255,255,255,.18);
+      opacity: .75;
+      border: 1px solid rgba(243,243,255,.16);
       padding: 4px 8px;
       border-radius: 999px;
       background: rgba(0,0,0,.20);
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
     }
-    .desc { margin-top: 8px; opacity: .9; line-height: 1.35; font-size: 13px; }
-
-    .viewer {
-      padding: 12px;
-      display: grid;
-      gap: 12px;
-      border-top: 1px dashed rgba(255,255,255,.22);
-      background: rgba(0,0,0,.18);
-    }
-    .viewer.hidden { display:none; }
-
-    audio { width: 100%; }
-
-    pre {
-      margin: 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      line-height: 1.5;
-      font-size: 14px;
-      opacity: .95;
+    .tdesc{
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.35;
+      color: var(--muted);
     }
 
-    .two { grid-column: span 12; }
-    @media (min-width: 900px) { .two { grid-column: span 6; } }
-
-    .rant { padding: 14px; }
-    .rant p { margin: 0; line-height: 1.45; opacity: .92; }
-
-    footer {
-      margin-top: 20px;
-      padding: 14px;
+    footer{
+      margin-top: 18px;
+      border:1px solid rgba(243,243,255,.14);
       border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.14);
+      padding: 12px 14px;
       background: rgba(0,0,0,.22);
-      display: flex;
+      display:flex;
       justify-content: space-between;
       gap: 12px;
-      flex-wrap: wrap;
-      opacity: .9;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size: 12px;
     }
 
-    .tiny { font-size: 12px; opacity: .7; }
-    .error { color: #ff5c7a; font-weight: 900; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    /* ===== PSYCHO LED MODE ===== */
+    body.led {
+      animation: ledHue 2.4s linear infinite;
+    }
+
+    body.led .paint { animation: paintPulse .35s linear infinite; }
+    body.led .card, body.led .hero, body.led .track { box-shadow: 0 0 0 rgba(0,0,0,0); }
+
+    @keyframes ledHue {
+      0%   { filter: hue-rotate(0deg) saturate(1.35) contrast(1.08); }
+      100% { filter: hue-rotate(360deg) saturate(1.35) contrast(1.08); }
+    }
+    @keyframes paintPulse {
+      0%   { opacity: .92; transform: scale(1.04) rotate(0deg); }
+      50%  { opacity: 1;   transform: scale(1.08) rotate(1deg); }
+      100% { opacity: .92; transform: scale(1.04) rotate(0deg); }
+    }
+
+    /* Be decent: respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      body.led { animation: none; }
+      body.led .paint { animation: none; }
+      .track:hover{ transform:none; }
+    }
   </style>
 </head>
+
 <body>
-  <div class="bg"></div>
-  <div class="noise"></div>
+  <!-- Organic paint explosions -->
+  <svg class="paint" viewBox="0 0 1200 800" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <filter id="goo">
+        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="7" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="90" xChannelSelector="R" yChannelSelector="G"/>
+        <feGaussianBlur stdDeviation="12" result="blur"/>
+        <feColorMatrix in="blur" type="matrix" values="
+          1 0 0 0 0
+          0 1 0 0 0
+          0 0 1 0 0
+          0 0 0 22 -10" result="goo"/>
+        <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+      </filter>
+      <radialGradient id="g1" cx="30%" cy="25%" r="60%">
+        <stop offset="0%" stop-color="var(--c1)" stop-opacity=".85"/>
+        <stop offset="55%" stop-color="var(--c4)" stop-opacity=".45"/>
+        <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="g2" cx="78%" cy="22%" r="60%">
+        <stop offset="0%" stop-color="var(--c2)" stop-opacity=".85"/>
+        <stop offset="60%" stop-color="var(--c3)" stop-opacity=".40"/>
+        <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="g3" cx="65%" cy="86%" r="65%">
+        <stop offset="0%" stop-color="var(--c5)" stop-opacity=".82"/>
+        <stop offset="60%" stop-color="var(--c1)" stop-opacity=".35"/>
+        <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="g4" cx="18%" cy="88%" r="70%">
+        <stop offset="0%" stop-color="var(--c3)" stop-opacity=".78"/>
+        <stop offset="65%" stop-color="var(--c2)" stop-opacity=".28"/>
+        <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <g filter="url(#goo)" opacity=".95">
+      <rect x="-80" y="-80" width="1400" height="960" fill="var(--ink)"/>
+      <ellipse cx="260" cy="190" rx="520" ry="360" fill="url(#g1)"/>
+      <ellipse cx="980" cy="200" rx="520" ry="360" fill="url(#g2)"/>
+      <ellipse cx="820" cy="680" rx="620" ry="420" fill="url(#g3)"/>
+      <ellipse cx="240" cy="700" rx="640" ry="430" fill="url(#g4)"/>
+    </g>
+  </svg>
+
+  <div class="grain"></div>
 
   <div class="wrap">
-    <div class="topbar">
-      <div class="tag">🧨 <b>TOO WHITE PRODUCTIONS</b> <span style="opacity:.7;">// audio dumpzone</span></div>
-      <div class="tag">🌀 <span id="status">vibe: unstable</span></div>
-    </div>
-
-    <div class="marquee" aria-hidden="true">
-      <div class="marquee-track" id="mqTrack">
-        <span>too white productions</span>
-        <span>upload tracks / share links / cause problems</span>
-        <span>art is a crime scene</span>
-        <span>turn volume up / turn dignity down</span>
-        <span>no refunds</span>
-        <span>unhinged audio archive</span>
-      </div>
+    <div class="top">
+      <div class="badge">🧨 TOO WHITE PRODUCTIONS <small>// twp</small></div>
+      <button class="btn" id="ledBtn" type="button">PSYCHO LED MODE</button>
     </div>
 
     <section class="hero">
-      <h1 class="title">Too White<br/>Productions</h1>
+      <h1 class="title">TOO WHITE<br/>PRODUCTIONS</h1>
       <p class="subtitle">
-        Drop-a-folder. Get-a-link. No platforms. No logins. No vibes police.
-        Click a track to preview it right here, or open the track page for the clean link.
+        Minimal. Monospace. Loud as hell. This is your lobby.
+        Each track lives in <b>/tracks/</b> as a folder. You drop it in, push to GitHub, share the link. Done.
       </p>
-      <div class="btnrow">
-        <a class="btn" href="#drops">Enter the drops</a>
-        <a class="btn" href="./tracks/">Open /tracks/</a>
-        <a class="btn" href="#how">How it works</a>
-      </div>
-      <div class="tiny" style="margin-top:10px;">
-        Folder format: <code>tracks/YYYY-MM-DD_title/</code> containing <code>index.html</code>, <code>lyrics.txt</code>, <code>song.m4a</code>
+
+      <div class="rulebox" id="rules">
+        <h3>How to maintain this shit</h3>
+        <ul>
+          <li>All tracks go under: <code>twp/tracks/</code></li>
+          <li>Folder naming: <code>YYYY-MM-DD_title</code> (example: <code>2025-12-23_ocgangster</code>)</li>
+          <li>Inside each track folder you keep exactly:</li>
+          <li style="list-style:none; margin-top:8px;">
+            <code>index.html</code> • <code>lyrics.txt</code> • <code>song.m4a</code> (or <code>song.mp3</code>)
+          </li>
+          <li>Track URL pattern:</li>
+          <li style="list-style:none; margin-top:8px;">
+            <code>https://elmreks.github.io/twp/tracks/YYYY-MM-DD_title/</code>
+          </li>
+        </ul>
       </div>
     </section>
 
-    <div class="grid" id="drops">
+    <div class="grid">
       <section class="card">
         <div class="hd">
-          <h2>Recent Drops</h2>
-          <span class="pill">🎛️ live list from /tracks</span>
+          <h2>TRACKS</h2>
+          <div class="note">manual links = fast + unbreakable</div>
         </div>
 
-        <div class="tracklist" id="trackList">
-          <div style="opacity:.8; padding:8px;">Loading tracks…</div>
-        </div>
+        <div class="tracks">
+          <!-- EDIT THIS LIST ONLY. keep it simple. -->
+          <a class="track" href="./tracks/2025-12-23_ocgangster/">
+            <div class="tline">
+              <div class="tname">ocgangster</div>
+              <div class="tdate">2025-12-23</div>
+            </div>
+            <div class="tdesc">office-chair villainy. street-level mayhem. dumb banger energy.</div>
+          </a>
 
-        <div class="viewer hidden" id="viewer">
-          <div class="tracktitle">
-            <strong id="viewerTitle">—</strong>
-            <span class="badge">
-              <span id="viewerDate">—</span>
-              <a id="viewerLink" class="badge" href="#" style="text-decoration:none;">open page ↗</a>
-            </span>
-          </div>
+          <a class="track" href="./tracks/2025-12-30_next-banger/">
+            <div class="tline">
+              <div class="tname">next-banger (placeholder)</div>
+              <div class="tdate">2025-12-30</div>
+            </div>
+            <div class="tdesc">replace this once you drop the folder in /tracks.</div>
+          </a>
 
-          <audio id="viewerAudio" controls preload="metadata"></audio>
-
-          <div class="tiny">
-            <span>if audio doesn’t load, you probably named the file wrong. it must be <code>song.m4a</code> (or <code>song.mp3</code>).</span>
-          </div>
-
-          <pre id="viewerLyrics">—</pre>
-        </div>
-      </section>
-
-      <section class="card two" id="how">
-        <div class="hd">
-          <h2>How This Works</h2>
-          <span class="pill">📦 folder = track</span>
-        </div>
-        <div class="rant">
-          <p>
-            Each song lives in its own folder inside <b>/tracks/</b>.
-            Inside that folder: <b>index.html</b> (the track page), <b>lyrics.txt</b> (the words), and <b>song.m4a</b> (the noise).
-            <br/><br/>
-            You upload the folder, you get a clean link. The lobby stays loud so the track pages can stay simple.
-          </p>
-        </div>
-      </section>
-
-      <section class="card two">
-        <div class="hd">
-          <h2>Official Label Policy</h2>
-          <span class="pill">⚖️ legally: lmao</span>
-        </div>
-        <div class="rant">
-          <p>
-            • All beats are innocent until proven funky.<br/>
-            • If you don’t like it, pretend it’s “conceptual.”<br/>
-            • If the page hurts your eyes, that’s on purpose. Drink water.<br/>
-            • Too White Productions is fictional, chaotic, and allergic to normal fonts.
-          </p>
+          <a class="track" href="./tracks/2026-01-02_third-thing/">
+            <div class="tline">
+              <div class="tname">third-thing (placeholder)</div>
+              <div class="tdate">2026-01-02</div>
+            </div>
+            <div class="tdesc">your future self will thank you for consistent naming.</div>
+          </a>
         </div>
       </section>
     </div>
 
     <footer>
-      <div>© <span id="yr"></span> Too White Productions (fictional) — hosted on GitHub Pages</div>
-      <div class="tiny">operator: <b>elmreks</b></div>
+      <div>© <span id="yr"></span> twp • hosted on GitHub Pages</div>
+      <div>monospace + paint splatter • push fast, ship faster</div>
     </footer>
   </div>
 
   <script>
     document.getElementById("yr").textContent = new Date().getFullYear();
 
-    const statuses = [
-      "vibe: unstable",
-      "vibe: chaotic neutral",
-      "vibe: fluorescent menace",
-      "vibe: suspiciously groovy",
-      "vibe: glitter threat",
-      "vibe: polite disaster"
-    ];
-    document.getElementById("status").textContent =
-      statuses[Math.floor(Math.random() * statuses.length)];
+    const btn = document.getElementById("ledBtn");
+    const body = document.body;
 
-    // Marquee: duplicate content so it never cuts off
-    const mq = document.getElementById("mqTrack");
-    if (mq && !mq.dataset.duplicated) {
-      mq.dataset.duplicated = "true";
-      mq.innerHTML = mq.innerHTML + mq.innerHTML;
+    // Persist LED mode across refreshes
+    const saved = localStorage.getItem("twp_led");
+    if (saved === "1") body.classList.add("led");
+
+    function setBtnText() {
+      btn.textContent = body.classList.contains("led") ? "TURN OFF LED MODE" : "PSYCHO LED MODE";
     }
+    setBtnText();
 
-    // ===== Track listing + preview =====
-    const OWNER = "elmreks";
-    const REPO  = "twp";
-    const TRACKS_PATH = "tracks";
-    const TRACK_DIR_REGEX = /^\\d{4}-\\d{2}-\\d{2}[_-]/;
+    btn.addEventListener("click", () => {
+      body.classList.toggle("led");
+      localStorage.setItem("twp_led", body.classList.contains("led") ? "1" : "0");
+      setBtnText();
 
-    const basePagesUrl = `${location.origin}/${REPO}/`;
-
-    const trackListEl = document.getElementById("trackList");
-    const viewerEl    = document.getElementById("viewer");
-    const vTitle      = document.getElementById("viewerTitle");
-    const vDate       = document.getElementById("viewerDate");
-    const vLink       = document.getElementById("viewerLink");
-    const vAudio      = document.getElementById("viewerAudio");
-    const vLyrics     = document.getElementById("viewerLyrics");
-
-    const titleFromFolder = (name) =>
-      name.replace(/^\\d{4}-\\d{2}-\\d{2}[_-]?/, "")
-          .replace(/[_-]+/g, " ")
-          .trim() || name;
-
-    const dateFromFolder = (name) => {
-      const m = name.match(/^(\\d{4}-\\d{2}-\\d{2})/);
-      return m ? m[1] : "—";
-    };
-
-    async function fetchJson(url) {
-      const r = await fetch(url, { headers: { "Accept": "application/vnd.github+json" } });
-      if (!r.ok) throw new Error(`Fetch failed ${r.status}`);
-      return r.json();
-    }
-
-    async function loadTracks() {
-      const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${TRACKS_PATH}`;
-      const items = await fetchJson(api);
-
-      const dirs = items
-        .filter(x => x.type === "dir")
-        .filter(x => TRACK_DIR_REGEX.test(x.name))
-        .sort((a,b) => dateFromFolder(b.name).localeCompare(dateFromFolder(a.name)));
-
-      if (!dirs.length) {
-        trackListEl.innerHTML = `<div style="opacity:.8; padding:8px;">No tracks yet.</div>`;
-        return;
+      // tiny kick in the teeth (fast)
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        body.animate(
+          [
+            { transform: "translate(0,0) rotate(0deg)" },
+            { transform: "translate(2px,-1px) rotate(-0.2deg)" },
+            { transform: "translate(-2px,2px) rotate(0.3deg)" },
+            { transform: "translate(1px,1px) rotate(-0.1deg)" },
+            { transform: "translate(0,0) rotate(0deg)" }
+          ],
+          { duration: 220, easing: "ease-out" }
+        );
       }
-
-      trackListEl.innerHTML = dirs.map(d => {
-        const date = dateFromFolder(d.name);
-        const title = titleFromFolder(d.name);
-        const href = `${basePagesUrl}${TRACKS_PATH}/${d.name}/`;
-        return `
-          <div class="track" data-folder="${d.name}" data-href="${href}">
-            <div class="tracktitle">
-              <strong>${title}</strong>
-              <span class="badge">${date}</span>
-            </div>
-            <div class="desc">click to preview here • or open the track page</div>
-          </div>
-        `;
-      }).join("");
-
-      // click handlers
-      [...trackListEl.querySelectorAll(".track")].forEach(el => {
-        el.addEventListener("click", async () => {
-          const folder = el.dataset.folder;
-          const href   = el.dataset.href;
-
-          viewerEl.classList.remove("hidden");
-          vTitle.textContent = titleFromFolder(folder);
-          vDate.textContent  = dateFromFolder(folder);
-          vLink.href = href;
-
-          // Set audio sources (m4a preferred)
-          const m4a = `${basePagesUrl}${TRACKS_PATH}/${folder}/song.m4a`;
-          const mp3 = `${basePagesUrl}${TRACKS_PATH}/${folder}/song.mp3`;
-
-          vAudio.innerHTML = `
-            <source src="${m4a}" type="audio/mp4">
-            <source src="${mp3}" type="audio/mpeg">
-          `;
-          vAudio.load();
-
-          // Load lyrics (from live site path)
-          vLyrics.textContent = "Loading lyrics…";
-          try {
-            const lr = await fetch(`${basePagesUrl}${TRACKS_PATH}/${folder}/lyrics.txt`, { cache: "no-store" });
-            if (!lr.ok) throw new Error("lyrics missing");
-            const txt = await lr.text();
-            vLyrics.textContent = txt.trim() || "(lyrics intentionally blank)";
-          } catch (e) {
-            vLyrics.innerHTML = `<span class="error">lyrics.txt not found</span>`;
-          }
-
-          // Scroll viewer into view
-          viewerEl.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-      });
-    }
-
-    loadTracks().catch(err => {
-      trackListEl.innerHTML = `<div class="error" style="padding:8px;">Couldn’t load /tracks list. ${err.message}</div>`;
-      console.error(err);
     });
   </script>
 </body>
