@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Too White Productions</title>
+  <meta name="description" content="Too White Productions: chaotic audio dropzone." />
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow-x: hidden;
+      background: #0b0b12;
+      color: #f7f7ff;
+    }
+
+    /* Chaotic moving background */
+    .bg {
+      position: fixed; inset: -40vmax;
+      background:
+        radial-gradient(circle at 12% 20%, rgba(255,0,160,.75), transparent 35%),
+        radial-gradient(circle at 80% 10%, rgba(0,255,240,.65), transparent 35%),
+        radial-gradient(circle at 70% 80%, rgba(255,240,0,.70), transparent 40%),
+        radial-gradient(circle at 20% 85%, rgba(120,70,255,.75), transparent 40%),
+        conic-gradient(from 90deg, rgba(255,255,255,.08), rgba(255,255,255,0), rgba(255,255,255,.08));
+      filter: blur(14px) saturate(1.35);
+      animation: wobble 11s ease-in-out infinite;
+      z-index: -3;
+    }
+    @keyframes wobble {
+      0%   { transform: rotate(0deg) scale(1.05); }
+      50%  { transform: rotate(9deg) scale(1.18); }
+      100% { transform: rotate(0deg) scale(1.05); }
+    }
+
+    /* Faux “spray paint” noise overlay */
+    .noise {
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+      opacity: .55;
+      pointer-events: none;
+      z-index: -2;
+    }
+
+    /* Floating stickers */
+    .sticker {
+      position: fixed;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,.35);
+      background: rgba(0,0,0,.35);
+      box-shadow: 0 12px 50px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      transform: rotate(var(--r, 0deg));
+      animation: drift var(--t, 9s) ease-in-out infinite;
+      z-index: -1;
+      user-select: none;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    @keyframes drift {
+      0%   { transform: translate3d(0,0,0) rotate(var(--r, 0deg)); }
+      50%  { transform: translate3d(var(--x, 20px), var(--y, 30px), 0) rotate(calc(var(--r, 0deg) + 7deg)); }
+      100% { transform: translate3d(0,0,0) rotate(var(--r, 0deg)); }
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 22px 16px 80px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tag {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.25);
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(8px);
+      font-size: 13px;
+      opacity: .95;
+    }
+
+    .marquee {
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 14px;
+      background: rgba(0,0,0,.28);
+      overflow: hidden;
+      position: relative;
+    }
+    .marquee > div {
+      display: inline-block;
+      white-space: nowrap;
+      padding: 10px 0;
+      animation: scroll 12s linear infinite;
+      will-change: transform;
+    }
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .marquee span {
+      display: inline-block;
+      padding: 0 16px;
+      font-weight: 900;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(0,0,0,.20));
+      box-shadow: 0 22px 80px rgba(0,0,0,.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(34px, 6vw, 64px);
+      line-height: 0.95;
+      letter-spacing: -1px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      text-shadow: 0 10px 40px rgba(0,0,0,.55);
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      font-size: clamp(14px, 2.2vw, 18px);
+      opacity: .9;
+      max-width: 68ch;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .card {
+      grid-column: span 12;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.28);
+      box-shadow: 0 16px 70px rgba(0,0,0,.28);
+      overflow: hidden;
+    }
+
+    .card .hd {
+      padding: 14px 14px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px dashed rgba(255,255,255,.22);
+      background: linear-gradient(90deg, rgba(255,0,160,.20), rgba(0,255,240,.14), rgba(255,240,0,.16));
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(8px);
+      opacity: .95;
+    }
+
+    .tracklist { padding: 12px; display: grid; gap: 12px; }
+    .track {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.16);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,0,160,.18), transparent 40%),
+        radial-gradient(circle at 80% 30%, rgba(0,255,240,.16), transparent 40%),
+        radial-gradient(circle at 60% 90%, rgba(255,240,0,.14), transparent 50%),
+        rgba(0,0,0,.20);
+      transition: transform .18s ease, border-color .18s ease;
+    }
+    .track:hover { transform: translateY(-3px) rotate(-.15deg); border-color: rgba(255,255,255,.34); }
+
+    a.tracklink {
+      color: inherit;
+      text-decoration: none;
+      display: block;
+    }
+
+    .tracktitle {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: baseline;
+    }
+    .tracktitle strong {
+      font-size: 20px;
+      font-weight: 950;
+      letter-spacing: .2px;
+    }
+    .tracktitle em {
+      font-style: normal;
+      opacity: .8;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.20);
+    }
+
+    .desc { margin-top: 8px; opacity: .9; line-height: 1.35; }
+    .micro { margin-top: 10px; font-size: 12px; opacity: .75; display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn {
+      border: 1px solid rgba(255,255,255,.20);
+      background: rgba(255,255,255,.06);
+      color: inherit;
+      padding: 10px 12px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 850;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+      font-size: 12px;
+      transition: transform .14s ease, background .14s ease;
+    }
+    .btn:hover { transform: translateY(-2px); background: rgba(255,255,255,.10); }
+
+    .two { grid-column: span 12; }
+    @media (min-width: 860px) {
+      .two { grid-column: span 6; }
+    }
+
+    .rant { padding: 14px; }
+    .rant p { margin: 0; line-height: 1.45; opacity: .92; }
+    .rant b { opacity: 1; }
+
+    footer {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      opacity: .9;
+    }
+
+    /* tiny chaos button */
+    .chaos {
+      cursor: pointer;
+      user-select: none;
+      border-radius: 999px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.08);
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="noise"></div>
+
+  <div class="sticker" style="top: 14px; left: 12px; --r:-12deg; --x: 18px; --y: 22px; --t: 7s;">Certified Unhinged</div>
+  <div class="sticker" style="top: 88px; right: 14px; --r:10deg; --x: -20px; --y: 26px; --t: 9s;">Caution: Beats</div>
+  <div class="sticker" style="bottom: 22px; left: 18px; --r:6deg; --x: 24px; --y: -18px; --t: 10s;">No Refunds</div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="tag">🧨 <b>TOO WHITE PRODUCTIONS</b> <span style="opacity:.7;">// audio dumpzone</span></div>
+      <div class="tag">🌀 <span id="status">vibe: unstable</span></div>
+    </div>
+
+    <div class="marquee" aria-hidden="true">
+      <div>
+        <span>too white productions</span>
+        <span>upload tracks / share links / cause problems</span>
+        <span>art is a crime scene</span>
+        <span>turn volume up / turn dignity down</span>
+        <span>too white productions</span>
+        <span>upload tracks / share links / cause problems</span>
+        <span>art is a crime scene</span>
+        <span>turn volume up / turn dignity down</span>
+      </div>
+    </div>
+
+    <section class="hero">
+      <h1 class="title">Too White<br/>Productions</h1>
+      <p class="subtitle">
+        A fictional label with a real audio player problem: you want a link that just plays the damn track and shows the lyrics.
+        This is the lobby. The chaos is intentional. The taste is questionable. The beats are innocent.
+      </p>
+
+      <div class="btnrow">
+        <a class="btn" href="#tracks">Enter the tracks</a>
+        <a class="btn" href="tracks/" title="If you make a tracks index later, this can point there.">Open /tracks/ (optional)</a>
+        <span class="chaos" id="chaosBtn">Summon Chaos</span>
+      </div>
+    </section>
+
+    <div class="grid" id="tracks">
+      <section class="card">
+        <div class="hd">
+          <h2>Recent Drops</h2>
+          <span class="pill">🎛️ 100% homemade, 0% regulated</span>
+        </div>
+        <div class="tracklist">
+
+fuck yes, i don't care about this, but i'll add the tracklist here later.
+          </div>
+
+        </div>
+      </section>
+
+      <section class="card two">
+        <div class="hd">
+          <h2>How This Works</h2>
+          <span class="pill">📦 folder = track</span>
+        </div>
+        <div class="rant">
+          <p>
+            Each song lives in its own folder inside <b>/tracks/</b>. Inside that folder:
+            <b>index.html</b> (the track page), <b>lyrics.txt</b> (the words), and <b>song.mp3</b> (the noise).
+            <br/><br/>
+            You upload the folder, you get a clean link.
+            The lobby stays loud so the track pages can stay simple.
+          </p>
+        </div>
+      </section>
+
+      <section class="card two">
+        <div class="hd">
+          <h2>Official Label Policy</h2>
+          <span class="pill">⚖️ legally: lmao</span>
+        </div>
+        <div class="rant">
+          <p>
+            • All beats are innocent until proven funky.<br/>
+            • If you don’t like it, pretend it’s “conceptual.”<br/>
+            • If the page hurts your eyes, that’s on purpose. Drink water.<br/>
+            • Too White Productions is fictional, chaotic, and allergic to normal fonts.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <div>© <span id="yr"></span> Too White Productions (fictional) — hosted on GitHub Pages</div>
+      <div style="opacity:.85;">contact: <span title="placeholder">too.white@nowhere.example</span></div>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById("yr").textContent = new Date().getFullYear();
+
+    const statuses = [
+      "vibe: unstable",
+      "vibe: fluorescent menace",
+      "vibe: chaotic neutral",
+      "vibe: suspiciously groovy",
+      "vibe: fizzy violence",
+      "vibe: glitter threat",
+      "vibe: polite disaster"
+    ];
+
+    const statusEl = document.getElementById("status");
+    const chaosBtn = document.getElementById("chaosBtn");
+
+    function setStatus() {
+      statusEl.textContent = statuses[Math.floor(Math.random() * statuses.length)];
+    }
+    setStatus();
+
+    chaosBtn.addEventListener("click", () => {
+      setStatus();
+      // Micro-chaos: shake the hero slightly
+      const hero = document.querySelector(".hero");
+      hero.animate(
+        [
+          { transform: "translate(0,0) rotate(0deg)" },
+          { transform: "translate(2px,-2px) rotate(-0.4deg)" },
+          { transform: "translate(-2px,2px) rotate(0.5deg)" },
+          { transform: "translate(1px,1px) rotate(-0.2deg)" },
+          { transform: "translate(0,0) rotate(0deg)" }
+        ],
+        { duration: 420, iterations: 1, easing: "ease-out" }
+      );
+    });
+  </script>
+  <script>
+  // ===== CONFIG =====
+  const OWNER = "elmreks";
+  const REPO  = "twp";
+  const TRACKS_PATH = "tracks";                 // <-- key change
+  const TRACK_DIR_REGEX = /^\d{4}-\d{2}-\d{2}[_-]/;
+
+  const mount = document.getElementById("trackList");
+
+  function titleFromFolder(name) {
+    return name
+      .replace(/^\d{4}-\d{2}-\d{2}[_-]?/, "")
+      .replace(/[_-]+/g, " ")
+      .trim() || name;
+  }
+
+  function dateFromFolder(name) {
+    const m = name.match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : "—";
+  }
+
+  async function loadTracks() {
+    const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${TRACKS_PATH}`;
+    const res = await fetch(api, { headers: { "Accept": "application/vnd.github+json" } });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const items = await res.json();
+
+    const dirs = items
+      .filter(x => x.type === "dir")
+      .filter(x => TRACK_DIR_REGEX.test(x.name))
+      .sort((a,b) => dateFromFolder(b.name).localeCompare(dateFromFolder(a.name)));
+
+    if (!dirs.length) {
+      mount.innerHTML = `<div style="opacity:.75">No tracks found in /tracks yet.</div>`;
+      return;
+    }
+
+    mount.innerHTML = `
+      <div style="display:grid; gap:12px; margin-top:14px;">
+        ${dirs.map(d => `
+          <a href="./${TRACKS_PATH}/${d.name}/" style="
+            display:block; text-decoration:none; color:inherit;
+            padding:14px; border-radius:16px;
+            border:1px solid rgba(255,255,255,.18);
+            background: rgba(0,0,0,.22);
+          ">
+            <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+              <div style="font-size:20px; font-weight:950;">${titleFromFolder(d.name)}</div>
+              <div style="font-size:12px; opacity:.8; border:1px solid rgba(255,255,255,.16); padding:4px 8px; border-radius:999px;">
+                ${dateFromFolder(d.name)}
+              </div>
+            </div>
+          </a>
+        `).join("")}
+      </div>
+      <div style="margin-top:10px; font-size:12px; opacity:.65;">
+        Auto-generated from GitHub API: /tracks
+      </div>
+    `;
+  }
+
+  loadTracks().catch(err => {
+    mount.innerHTML = `
+      <div style="color:#ff5c7a; font-weight:900;">Couldn’t load track list.</div>
+      <div style="opacity:.75; margin-top:6px; font-size:12px;">
+        ${String(err.message || err)}
+        <br/>If you refresh a lot, GitHub can rate-limit anonymous API calls. Wait a minute and reload.
+      </div>
+    `;
+    console.error(err);
+  });
+</script>
+
+
+</body>
+</html>
