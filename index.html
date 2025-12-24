@@ -344,10 +344,7 @@
           <h2>Recent Drops</h2>
           <span class="pill">🎛️ 100% homemade, 0% regulated</span>
         </div>
-        <div class="tracklist">
-
-fuck yes, i don't care about this, but i'll add the tracklist here later.
-          </div>
+        <div class="tracklist"></div>
 
         </div>
       </section>
@@ -427,31 +424,34 @@ fuck yes, i don't care about this, but i'll add the tracklist here later.
       );
     });
   </script>
-  <script>
-  // ===== CONFIG =====
+ <script>
+(() => {
   const OWNER = "elmreks";
   const REPO  = "twp";
-  const TRACKS_PATH = "tracks";                 // <-- key change
+  const TRACKS_PATH = "tracks";
+
+  // folder naming rule: 2025-12-23_title-goes-here
   const TRACK_DIR_REGEX = /^\d{4}-\d{2}-\d{2}[_-]/;
 
   const mount = document.getElementById("trackList");
 
-  function titleFromFolder(name) {
-    return name
-      .replace(/^\d{4}-\d{2}-\d{2}[_-]?/, "")
-      .replace(/[_-]+/g, " ")
-      .trim() || name;
-  }
+  const basePagesUrl = `${location.origin}/${REPO}/`;
 
-  function dateFromFolder(name) {
+  const titleFromFolder = (name) =>
+    name.replace(/^\d{4}-\d{2}-\d{2}[_-]?/, "")
+        .replace(/[_-]+/g, " ")
+        .trim() || name;
+
+  const dateFromFolder = (name) => {
     const m = name.match(/^(\d{4}-\d{2}-\d{2})/);
     return m ? m[1] : "—";
-  }
+  };
 
   async function loadTracks() {
     const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${TRACKS_PATH}`;
     const res = await fetch(api, { headers: { "Accept": "application/vnd.github+json" } });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+
     const items = await res.json();
 
     const dirs = items
@@ -460,14 +460,14 @@ fuck yes, i don't care about this, but i'll add the tracklist here later.
       .sort((a,b) => dateFromFolder(b.name).localeCompare(dateFromFolder(a.name)));
 
     if (!dirs.length) {
-      mount.innerHTML = `<div style="opacity:.75">No tracks found in /tracks yet.</div>`;
+      mount.innerHTML = `<div style="opacity:.8">No tracks yet. Add folders under <code>/tracks</code>.</div>`;
       return;
     }
 
     mount.innerHTML = `
       <div style="display:grid; gap:12px; margin-top:14px;">
         ${dirs.map(d => `
-          <a href="./${TRACKS_PATH}/${d.name}/" style="
+          <a href="${basePagesUrl}${TRACKS_PATH}/${d.name}/" style="
             display:block; text-decoration:none; color:inherit;
             padding:14px; border-radius:16px;
             border:1px solid rgba(255,255,255,.18);
@@ -482,23 +482,19 @@ fuck yes, i don't care about this, but i'll add the tracklist here later.
           </a>
         `).join("")}
       </div>
-      <div style="margin-top:10px; font-size:12px; opacity:.65;">
-        Auto-generated from GitHub API: /tracks
-      </div>
     `;
   }
 
   loadTracks().catch(err => {
     mount.innerHTML = `
-      <div style="color:#ff5c7a; font-weight:900;">Couldn’t load track list.</div>
-      <div style="opacity:.75; margin-top:6px; font-size:12px;">
-        ${String(err.message || err)}
-        <br/>If you refresh a lot, GitHub can rate-limit anonymous API calls. Wait a minute and reload.
-      </div>
+      <div style="color:#ff5c7a; font-weight:950;">Couldn’t load tracks.</div>
+      <div style="opacity:.75; font-size:12px; margin-top:6px;">${String(err.message || err)}</div>
     `;
     console.error(err);
   });
+})();
 </script>
+
 
 
 </body>
