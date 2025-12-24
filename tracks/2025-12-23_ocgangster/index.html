@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Track</title>
+
+  <style>
+    :root { color-scheme: dark; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0d0d11;
+      color: #f5f5fa;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 28px 16px 80px;
+    }
+
+    header {
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 40px);
+      margin: 0 0 6px;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+
+    .meta {
+      font-size: 13px;
+      opacity: .75;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.14);
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .small {
+      font-size: 12px;
+      opacity: .65;
+      margin-top: 8px;
+    }
+
+    a {
+      color: inherit;
+      opacity: .85;
+    }
+
+    .error {
+      color: #ff5c7a;
+      font-weight: 700;
+    }
+
+    footer {
+      margin-top: 28px;
+      font-size: 12px;
+      opacity: .6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header>
+      <h1 id="title">Loading…</h1>
+      <div class="meta">
+        <span>Uploaded: <span id="date">—</span></span>
+        <span>Too White Productions</span>
+      </div>
+    </header>
+
+    <section class="card">
+      <audio id="player" controls preload="metadata">
+        <source src="song.m4a" type="audio/mp4">
+        <source src="song.mp3" type="audio/mpeg">
+        Your browser is being a little bitch about audio.
+      </audio>
+      <div class="small">
+        Direct file:
+        <a href="song.m4a" target="_blank" rel="noopener">open</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <pre id="lyrics">Loading lyrics…</pre>
+    </section>
+
+    <footer>
+      <a href="../../index.html">← back to Too White Productions</a>
+    </footer>
+
+  </div>
+
+  <script>
+    // Derive title + date from folder name
+    const parts = location.pathname.split("/").filter(Boolean);
+    const folder = parts[parts.length - 1] || "track";
+
+    const titleGuess = folder
+      .replace(/^\\d{4}-\\d{2}-\\d{2}[_-]?/, "")
+      .replace(/[_-]+/g, " ")
+      .trim();
+
+    const dateMatch = folder.match(/^(\\d{4}-\\d{2}-\\d{2})/);
+
+    document.getElementById("title").textContent =
+      titleGuess || "Untitled Track";
+
+    if (dateMatch) {
+      document.getElementById("date").textContent = dateMatch[1];
+    }
+
+    // Load lyrics
+    fetch("lyrics.txt", { cache: "no-store" })
+      .then(r => {
+        if (!r.ok) throw new Error("no lyrics");
+        return r.text();
+      })
+      .then(text => {
+        document.getElementById("lyrics").textContent =
+          text.trim() || "(lyrics intentionally left blank)";
+      })
+      .catch(() => {
+        document.getElementById("lyrics").innerHTML =
+          "<span class='error'>lyrics.txt not found</span>";
+      });
+  </script>
+</body>
+</html>
