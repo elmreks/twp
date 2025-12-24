@@ -494,7 +494,13 @@
 })();
 </script>
 
-
+<script>
+  const mq = document.getElementById("mqTrack");
+  if (mq && !mq.dataset.duplicated) {
+    mq.dataset.duplicated = "true";
+    mq.innerHTML = mq.innerHTML + mq.innerHTML;
+  }
+</script>
 
 </body>
 </html>
